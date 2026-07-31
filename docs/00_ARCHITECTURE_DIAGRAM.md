@@ -6,15 +6,18 @@ Phase 5A の宅内 IPv6 直接公開、Phase 5B の ConoHa HTTPS 入口、IPv4
 ProxyJump 管理経路を 1 枚に統合する。
 図中には代替経路を併記しているが、Phase 5A と Phase 5B は宅内 IPv6 の
 着信可否に応じて配備時にいずれか一方を選択する。
+図は利用者から対象 PC まで、上から下へ進む順序で配置する。
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph Clients["利用者"]
+        direction LR
         Browser["Web Browser<br/>IPv4 / IPv6"]
         Operator["管理端末<br/>IPv4"]
     end
 
     subgraph Cloud["ConoHa などの dual-stack server"]
+        direction TB
         CloudCaddy["公開 Caddy<br/>TLS 1.3"]
         Bastion["OpenSSH Bastion<br/>ProxyJump"]
         CloudWG["ConoHa WireGuard peer"]
@@ -25,6 +28,7 @@ flowchart LR
     end
 
     subgraph HomeServer["宅内 Ubuntu WoL サーバー"]
+        direction TB
         HomeWG["宅内 WireGuard peer"]
         UbuntuFW["Ubuntu firewall<br/>送信元・port 制限"]
         HomeCaddy["宅内 Caddy<br/>公開 HTTPS または TCP 8080 origin"]
@@ -39,12 +43,13 @@ flowchart LR
     end
 
     subgraph HomeLAN["宅内 LAN"]
+        direction TB
         Broadcast["IPv4 broadcast<br/>UDP port 9"]
         Target["対象 PC<br/>38:05:25:38:F0:C9"]
     end
 
-    Browser -->|"Phase 5A（択一）<br/>DNS AAAA / HTTPS / TLS 1.3 / IPv6"| RouterFW
-    Browser -->|"Phase 5B（択一）<br/>HTTPS / TLS 1.3 / IPv4・IPv6"| CloudCaddy
+    Browser -->|"Phase 5A（択一）<br/>DNS AAAA<br/>HTTPS / TLS 1.3 / IPv6"| RouterFW
+    Browser -->|"Phase 5B（択一）<br/>HTTPS / TLS 1.3<br/>IPv4・IPv6"| CloudCaddy
     Operator -->|"SSH / IPv4"| Bastion
 
     CloudCaddy -->|"Phase 5B<br/>HTTP / TCP 8080"| CloudWG
